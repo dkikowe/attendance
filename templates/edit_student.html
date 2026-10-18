@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ student[1] }} - Өзгерту</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            margin-bottom: 30px;
+            font-weight: 600;
+            gap: 8px;
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+            margin-top: 20px;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(243, 156, 18, 0.4);
+        }
+        .flash-success {
+            background: linear-gradient(45deg, #27ae60, #219a52);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .flash-error {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .iin-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #856404;
+        }
+        .permission-warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/student/{{ student[0] }}" class="back-btn">
+            <span>⬅</span>
+            Артқа қайту
+        </a>
+        
+        <h1>✏️ {{ student[1] }} - Өзгерту</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- ИСПРАВЛЕННЫЙ ФОРМА - метод POST без указания action -->
+        <form method="POST">
+            <div class="form-group">
+                <label for="name">👤 Аты-жөні:</label>
+                <input type="text" id="name" name="name" value="{{ student[1] }}" required placeholder="Мысалы: Айгерім Қайратқызы">
+            </div>
+            
+            <div class="form-group">
+                <label for="gender">👥 Жынысы:</label>
+                <select id="gender" name="gender" required>
+                    <option value="Әйел" {% if student[2] == 'Әйел' %}selected{% endif %}>Әйел</option>
+                    <option value="Ер" {% if student[2] == 'Ер' %}selected{% endif %}>Ер</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="birthdate">🎂 Туған күні:</label>
+                <input type="date" id="birthdate" name="birthdate" value="{{ student[3] }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="faculty">🎓 Факультет:</label>
+                <select id="faculty" name="faculty" required>
+                    <option value="">Таңдаңыз</option>
+                    {% for faculty in faculties %}
+                    <option value="{{ faculty }}" {% if student[5] == faculty %}selected{% endif %}>{{ faculty }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">📞 Телефон нөмірі:</label>
+                <input type="tel" id="phone" name="phone" value="{{ student[6] }}" required placeholder="Мысалы: +7-777-123-45-67">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">📧 Электронды пошта:</label>
+                <input type="email" id="email" name="email" value="{{ student[7] }}" required placeholder="Мысалы: student@university.kz">
+            </div>
+            
+            <!-- ДОБАВЛЕНО ПОЛЕ ДЛЯ ЖСН -->
+            <div class="form-group">
+                <label for="iin">🆔 ЖСН (IIN):</label>
+                <input type="text" id="iin" name="iin" value="{{ student[8] }}" required placeholder="Мысалы: 123456789012">
+                {% if permissions.can_view_iin %}
+                <div class="iin-note">✅ ЖСН көрініп тұр - сізде өзгерту құқығы бар</div>
+                {% else %}
+                <div class="permission-warning">⛔ ЖСН көрінбейді - сізде өзгерту құқығы жоқ</div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                ✅ Өзгерістерді сақтау
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        // Валидация возраста
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
+        document.getElementById('birthdate').max = maxDate.toISOString().split('T')[0];
+        
+        document.getElementById('birthdate').addEventListener('change', function() {
+            const birthDate = new Date(this.value);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            if (age < 16) {
+                alert('⚠️ Студенттің жасы кемінде 16 болуы керек!');
+                this.value = '{{ student[3] }}';
+            }
+        });
+
+        // Валидация ЖСН (12 цифр)
+        document.getElementById('iin').addEventListener('input', function() {
+            const iinValue = this.value.replace(/\D/g, '');
+            if (iinValue.length > 12) {
+                this.value = iinValue.slice(0, 12);
+            }
+        });
+
+        // Валидация телефона
+        document.getElementById('phone').addEventListener('input', function() {
+            this.value = this.value.replace(/[^\d+-]/g, '');
+        });
+    </script>
+</body>
+</html>

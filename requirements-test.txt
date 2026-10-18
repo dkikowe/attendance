@@ -1,0 +1,6 @@
+Flask>=3.0
+qrcode[pil]>=8.0
+python-dotenv>=1.0
+tzdata>=2024.1
+pytest>=8.0
+zxing-cpp>=2.2

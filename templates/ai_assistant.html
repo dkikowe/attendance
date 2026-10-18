@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Көмекші - Студенттер базасы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            height: calc(100vh - 30px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 8px 16px;
+            background: #3B82F6;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .nav-btn:hover {
+            background: #2563EB;
+            transform: translateY(-2px);
+        }
+        
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-badge {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chat-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 15px 20px;
+            background: #f1f3f5;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .ai-icon {
+            width: 40px;
+            height: 40px;
+            background: #10B981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .chat-info h3 {
+            font-size: 1.2rem;
+            color: #333;
+        }
+        
+        .chat-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            max-width: 85%;
+            padding: 15px;
+            border-radius: 15px;
+            animation: fadeIn 0.3s;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.5;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message-ai {
+            background: white;
+            border: 1px solid #d1fae5;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .message-user {
+            background: #3B82F6;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .message-content {
+            font-size: 0.95rem;
+        }
+        
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 8px;
+            text-align: right;
+        }
+        
+        .quick-questions {
+            padding: 15px 20px;
+            background: #f0f9ff;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .quick-questions h4 {
+            color: #059669;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        
+        .quick-btn {
+            padding: 10px 15px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #475569;
+        }
+        
+        .quick-btn:hover {
+            background: #10B981;
+            color: white;
+            border-color: #10B981;
+            transform: translateY(-2px);
+        }
+        
+        .input-section {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: none;
+            height: 50px;
+            outline: none;
+        }
+        
+        .message-input:focus {
+            border-color: #10B981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .send-btn {
+            padding: 0 25px;
+            background: #10B981;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        
+        .send-btn:hover {
+            background: #059669;
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .typing-indicator {
+            padding: 10px 15px;
+            background: white;
+            border: 1px solid #d1fae5;
+            border-radius: 15px;
+            align-self: flex-start;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+        
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+        
+        /* Стили для скроллбара */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .container {
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-buttons {
+                justify-content: center;
+            }
+            
+            .user-section {
+                justify-content: center;
+            }
+            
+            .question-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .message {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Көмекші</h1>
+            <p>Студенттер базасын басқаруға арналған виртуалды ассистент</p>
+        </div>
+        
+        <div class="controls">
+            <div class="nav-buttons">
+                <a href="/students" class="nav-btn">📋 Студенттер</a>
+                <a href="/" class="nav-btn">🏠 Басты бет</a>
+                <a href="/statistics" class="nav-btn">📊 Статистика</a>
+            </div>
+            
+            <div class="user-section">
+                <div class="user-badge">
+                    {% if role == 'admin' %}👑{% elif role == 'teacher' %}👨‍🏫{% else %}👤{% endif %}
+                    <span>{{ username }} ({{ role }})</span>
+                </div>
+                <a href="/logout" class="nav-btn">🚪 Шығу</a>
+            </div>
+        </div>
+        
+        <div class="chat-wrapper">
+            <div class="chat-header">
+                <div class="ai-icon">AI</div>
+                <div class="chat-info">
+                    <h3>AI Ассистент</h3>
+                    <p>Сізге студенттер базасын басқаруға көмектесемін</p>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message message-ai">
+                    <div class="message-content">
+                        Сәлеметсіз бе! 👋 Мен студенттер базасының AI көмекшісімін.<br><br>
+                        
+                        📋 <strong>Мен сізге көмектесе аламын:</strong><br>
+                        • Кез келген студентті іздеу және ақпарат беру<br>
+                        • Статистиканы есептеу және талдау<br>
+                        • Факультеттер бойынша студенттерді көрсету<br><br>
+                        
+                        💡 <strong>Мысал сұрақтар:</strong><br>
+                        • "[Студент аты] туралы ақпарат бер"<br>
+                        • "Қанша студент бар?"<br>
+                        • "[Факультет] факультетінде неше студент бар?"<br>
+                        • "25 жастағы студенттер"<br><br>
+                        
+                        Сұрағыңызды төменде енгізіңіз!
+                    </div>
+                    <div class="message-time">{{ now.strftime('%H:%M') }}</div>
+                </div>
+            </div>
+            
+            <div class="quick-questions">
+                <h4>⚡ Жылдам сұрақтар:</h4>
+                <div class="question-grid">
+                    <button class="quick-btn" onclick="askQuestion('Қанша студент бар?')">📊 Қанша студент бар?</button>
+                    <button class="quick-btn" onclick="askQuestion('Қандай факультеттер бар?')">🎓 Қандай факультеттер бар?</button>
+                
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <div class="input-wrapper">
+                    <textarea 
+                        class="message-input" 
+                        id="messageInput" 
+                        placeholder="Сұрағыңызды осы жерге енгізіңіз..." 
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                    ></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                        <span>Жіберу</span>
+                        <span>📤</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let isLoading = false;
+    
+    // Автоматическое увеличение высоты textarea
+    const textarea = document.getElementById('messageInput');
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        if (this.scrollHeight > 150) {
+            this.style.height = '150px';
+            this.style.overflowY = 'auto';
+        }
+    });
+    
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        
+        if (!message || isLoading) return;
+        
+        // Добавляем сообщение пользователя
+        addMessage(message, 'user');
+        
+        // Очищаем поле ввода
+        input.value = '';
+        input.style.height = 'auto';
+        
+        // Показываем индикатор набора
+        showTypingIndicator();
+        
+        // Отправляем запрос к AI
+        askAI(message);
+    }
+    
+    function askQuestion(question) {
+        document.getElementById('messageInput').value = question;
+        sendMessage();
+    }
+    
+    function handleKeyDown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+    
+    function addMessage(content, sender) {
+        const container = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        
+        const time = new Date().toLocaleTimeString('kk-KZ', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        messageDiv.className = `message message-${sender}`;
+        messageDiv.innerHTML = `
+            <div class="message-content">${formatMessage(content)}</div>
+            <div class="message-time">${time}</div>
+        `;
+        
+        container.appendChild(messageDiv);
+        scrollToBottom();
+    }
+    
+    function formatMessage(text) {
+        if (!text) return '';
+        return text
+            .replace(/\n/g, '<br>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    }
+    
+    function showTypingIndicator() {
+        const container = document.getElementById('chatMessages');
+        const typingDiv = document.createElement('div');
+        
+        typingDiv.className = 'typing-indicator';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.innerHTML = `
+            <div class="typing-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        `;
+        
+        container.appendChild(typingDiv);
+        typingDiv.style.display = 'block';
+        document.getElementById('sendBtn').disabled = true;
+        
+        scrollToBottom();
+    }
+    
+    function hideTypingIndicator() {
+        const typingDiv = document.getElementById('typingIndicator');
+        if (typingDiv) {
+            typingDiv.remove();
+        }
+        document.getElementById('sendBtn').disabled = false;
+    }
+    
+    function scrollToBottom() {
+        const container = document.getElementById('chatMessages');
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    async function askAI(question) {
+        isLoading = true;
+        document.getElementById('sendBtn').disabled = true;
+        
+        try {
+            console.log('AI сұрақ:', question);
+            
+            const response = await fetch('/api/ask_ai', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ question: question })
+            });
+            
+            console.log('AI жауап статусы:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP қатесі: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('AI жауап:', data);
+            
+            hideTypingIndicator();
+            
+            if (data.success) {
+                addMessage(data.answer, 'ai');
+            } else {
+                addMessage('😔 Кешіріңіз, жауап беру мүмкін болмады: ' + (data.answer || 'белгісіз қате'), 'ai');
+            }
+        } catch (error) {
+            console.error('AI қатесі:', error);
+            hideTypingIndicator();
+            addMessage('❌ Жіберу кезінде қате орын алды: ' + error.message, 'ai');
+        } finally {
+            isLoading = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('messageInput').focus();
+        }
+    }
+    
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('AI Assistant жүктелді');
+        document.getElementById('messageInput').focus();
+        scrollToBottom();
+    });
+    </script>
+</body>
+</html>

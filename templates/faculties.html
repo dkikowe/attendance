@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>Факультеттер - Студенттер базасы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 2.8em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .header p {
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        .main-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        .btn-primary {
+            background: #3498db;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #27ae60;
+        }
+        .btn-success:hover {
+            background: #219653;
+        }
+        .btn-warning {
+            background: #f39c12;
+        }
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        .btn-danger {
+            background: #e74c3c;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-badge {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            border: 2px solid #e74c3c;
+        }
+        
+        .faculties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .faculty-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+        .faculty-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .faculty-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .faculty-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5em;
+            margin-right: 15px;
+        }
+        .faculty-info {
+            flex: 1;
+        }
+        .faculty-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .faculty-description {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+        .faculty-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #3498db;
+        }
+        .stat-label {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+        .faculty-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .add-faculty-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px dashed #e9ecef;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        .empty-state .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .main-buttons {
+                justify-content: center;
+            }
+            .user-info {
+                justify-content: center;
+            }
+            .faculties-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Факультеттер</h1>
+            <p>Оқу орнының факультеттерін басқару</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="controls">
+            <div class="main-buttons">
+                <a href="/students" class="btn btn-primary">📋 Студенттер</a>
+                <a href="/" class="btn btn-primary">🏠 Негізгі бет</a>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-badge">
+                    👑 {{ username }} ({{ role }})
+                </div>
+                <a href="/logout" class="btn btn-danger">🚪 Шығу</a>
+            </div>
+        </div>
+
+        <div class="add-faculty-form">
+            <h3 style="margin-bottom: 20px; color: #2c3e50;">➕ Жаңа факультет қосу</h3>
+            <form id="addFacultyForm">
+                <div class="form-group">
+                    <label class="form-label">🎓 Факультет аты</label>
+                    <input type="text" name="name" class="form-input" placeholder="Факультет атын енгізіңіз..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">📝 Сипаттама</label>
+                    <textarea name="description" class="form-textarea" placeholder="Факультет сипаттамасы..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">✅ Қосу</button>
+                    <button type="reset" class="btn btn-primary">🔄 Тазарту</button>
+                </div>
+            </form>
+        </div>
+
+        {% if faculties %}
+            <div class="faculties-grid">
+                {% for faculty in faculties %}
+                <div class="faculty-card">
+                    <div class="faculty-header">
+                        <div class="faculty-icon">🎓</div>
+                        <div class="faculty-info">
+                            <div class="faculty-name">{{ faculty[1] }}</div>
+                            {% if faculty[2] %}
+                            <div class="faculty-description">{{ faculty[2] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="faculty-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Студенттер</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ faculty[4][:10] if faculty[4] else 'Белгісіз' }}</div>
+                            <div class="stat-label">Қосылған</div>
+                        </div>
+                    </div>
+
+                    <div class="faculty-actions">
+                        <button class="btn btn-warning" onclick="editFaculty({{ faculty[0] }}, '{{ faculty[1] }}', '{{ faculty[2] or "" }}')">
+                            ✏️ Өзгерту
+                        </button>
+                        <button class="btn btn-danger" onclick="confirmDelete({{ faculty[0] }}, '{{ faculty[1] }}')">
+                            🗑️ Жою
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <h3>Факультеттер жоқ</h3>
+                <p>Алғашқы факультетті қосыңыз</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 15px; color: #2c3e50;">Факультетті жою</h3>
+            <p id="confirmationText" style="margin-bottom: 20px; color: #7f8c8d;">Сіз шынымен бұл факультетті жойғыңыз келе ме?</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="confirmDelete" class="btn btn-danger">Ия, жою</button>
+                <button id="cancelDelete" class="btn btn-primary">Болдырмау</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let facultyToDelete = null;
+
+        // Добавление факультета
+        document.getElementById('addFacultyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('/add_faculty', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Қате: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Қате:', error);
+                alert('Қосу кезінде қате орын алды');
+            });
+        });
+
+        // Редактирование факультета
+        function editFaculty(id, name, description) {
+            const newName = prompt('Факультет атын өзгерту:', name);
+            if (newName && newName !== name) {
+                const newDescription = prompt('Сипаттаманы өзгерту:', description);
+                
+                const formData = new FormData();
+                formData.append('name', newName);
+                formData.append('description', newDescription || '');
+                
+                fetch('/edit_faculty/' + id, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Қате: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Қате:', error);
+                    alert('Өзгерту кезінде қате орын алды');
+                });
+            }
+        }
+
+        // Подтверждение удаления
+        function confirmDelete(facultyId, facultyName) {
+            facultyToDelete = facultyId;
+            document.getElementById('confirmationText').textContent = 
+                'Сіз шынымен "' + facultyName + '" факультетін жойғыңыз келе ме?';
+            document.getElementById('confirmationModal').style.display = 'flex';
+        }
+
+        // Удаление факультета
+        function deleteFaculty() {
+            if (facultyToDelete) {
+                fetch('/delete_faculty/' + facultyToDelete, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Сервер қатесі');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Қате: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Қате:', error);
+                    alert('Жою кезінде қате орын алды: ' + error.message);
+                });
+            }
+        }
+
+        // Обработчики событий
+        document.getElementById('confirmDelete').addEventListener('click', deleteFaculty);
+        
+        document.getElementById('cancelDelete').addEventListener('click', function() {
+            document.getElementById('confirmationModal').style.display = 'none';
+            facultyToDelete = null;
+        });
+
+        // Закрытие модального окна при клике вне его
+        document.getElementById('confirmationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+                facultyToDelete = null;
+            }
+        });
+    </script>
+</body>
+</html>

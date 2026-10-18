@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>Статистика - Студенттер базасы</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --success: #00b09b;
+            --warning: #ff8c00;
+            --danger: #ff416c;
+            --info: #17a2b8;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            position: relative;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+        
+        .header h1 {
+            font-size: 3.5em;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header p {
+            font-size: 1.4em;
+            color: #6c757d;
+            font-weight: 500;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 25px 30px;
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.9), rgba(233, 236, 239, 0.9));
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        
+        .main-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 14px 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(106, 17, 203, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(106, 17, 203, 0.4);
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, var(--info), #2dd4bf);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .user-badge {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #ff8a00, #ff416c);
+            color: white;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1.1em;
+            box-shadow: 0 6px 20px rgba(255, 65, 108, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filters-section {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .filters-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary), var(--success));
+        }
+        
+        .filters-title {
+            font-size: 1.5em;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-label {
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--dark);
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-select {
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1em;
+            background: white;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236a11cb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 20px;
+            padding-right: 50px;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+        
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(106, 17, 203, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1%, transparent 20%);
+            transform: rotate(30deg);
+        }
+        
+        .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, var(--success), #00d2ff);
+            box-shadow: 0 15px 35px rgba(0, 176, 155, 0.3);
+        }
+        
+        .stat-card:nth-child(3) {
+            background: linear-gradient(135deg, var(--warning), var(--danger));
+            box-shadow: 0 15px 35px rgba(255, 140, 0, 0.3);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(106, 17, 203, 0.4);
+        }
+        
+        .stat-number {
+            font-size: 4em;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .stat-label {
+            font-size: 1.3em;
+            font-weight: 700;
+            opacity: 0.95;
+            letter-spacing: 0.5px;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .main-chart-section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            grid-column: 1;
+        }
+        
+        .main-chart-title {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 30px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .main-chart-wrapper {
+            position: relative;
+            height: 450px;
+            background: #fafbfc;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .side-charts {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            grid-column: 2;
+        }
+        
+        .mini-chart {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .mini-chart:hover {
+            transform: translateY(-5px);
+        }
+        
+        .mini-chart-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .mini-chart-wrapper {
+            position: relative;
+            height: 200px;
+        }
+        
+        .additional-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .chart-title {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        
+        .active-filters {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tag {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.95em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .filter-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2em;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+        
+        .filter-tag button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .last-update {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(0, 0, 0, 0.1);
+            color: #6c757d;
+            font-size: 1em;
+            font-weight: 600;
+        }
+        
+        .update-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--success), #00d2ff);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 700;
+            margin-left: 10px;
+            box-shadow: 0 4px 12px rgba(0, 176, 155, 0.3);
+        }
+        
+        @media (max-width: 1200px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .side-charts {
+                grid-column: 1;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                display: grid;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .additional-charts {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .main-chart-wrapper {
+                height: 350px;
+            }
+        }
+        
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px rgba(106, 17, 203, 0.5);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(106, 17, 203, 0.8), 0 0 30px rgba(106, 17, 203, 0.6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Студенттер статистикасы</h1>
+            <p>Толық статистикалық талдау және визуализация</p>
+        </div>
+        
+        <div class="controls">
+            <div class="main-buttons">
+                <a href="/students" class="btn btn-primary">📋 Студенттер тізімі</a>
+                <a href="/" class="btn btn-primary">🏠 Басты бет</a>
+                {% if permissions.can_add_faculty %}
+                <a href="/faculties" class="btn btn-warning">🎓 Факультеттер</a>
+                {% endif %}
+            </div>
+            
+            <div class="user-info">
+                <div class="user-badge">
+                    {% if role == 'admin' %}👑{% elif role == 'teacher' %}👨‍🏫{% else %}👤{% endif %}
+                    {{ username }} ({{ role }})
+                </div>
+                <a href="/logout" class="btn btn-danger">🚪 Шығу</a>
+            </div>
+        </div>
+
+        <!-- Фильтрлер -->
+        <div class="filters-section">
+            <div class="filters-title">🔍 Статистиканы фильтрлеу</div>
+            
+            <form id="filterForm" method="GET" action="/statistics">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">🎓 Факультет</label>
+                        <select name="faculty" class="filter-select" onchange="this.form.submit()">
+                            <option value="">Барлық факультеттер</option>
+                            {% for faculty in faculties %}
+                            <option value="{{ faculty }}" {% if current_faculty == faculty %}selected{% endif %}>
+                                {{ faculty }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">👥 Жынысы</label>
+                        <select name="gender" class="filter-select" onchange="this.form.submit()">
+                            <option value="">Барлық жыныстар</option>
+                            <option value="Әйел" {% if current_gender == 'Әйел' %}selected{% endif %}>Әйел</option>
+                            <option value="Ер" {% if current_gender == 'Ер' %}selected{% endif %}>Ер</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">🎂 Жас аралығы</label>
+                        <select name="age_range" class="filter-select" onchange="this.form.submit()">
+                            <option value="">Барлық жастар</option>
+                            <option value="under_20" {% if current_age_range == 'under_20' %}selected{% endif %}>18-19 жас</option>
+                            <option value="20_25" {% if current_age_range == '20_25' %}selected{% endif %}>20-25 жас</option>
+                            <option value="over_25" {% if current_age_range == 'over_25' %}selected{% endif %}>26+ жас</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">📈 Диаграмма түрі</label>
+                        <select name="chart_type" class="filter-select" onchange="this.form.submit()">
+                            <option value="bar" {% if current_chart_type == 'bar' %}selected{% endif %}>Бағанды диаграмма</option>
+                            <option value="pie" {% if current_chart_type == 'pie' %}selected{% endif %}>Дөңгелек диаграмма</option>
+                            <option value="line" {% if current_chart_type == 'line' %}selected{% endif %}>Сызықты график</option>
+                            <option value="doughnut" {% if current_chart_type == 'doughnut' %}selected{% endif %}>Сақиналы диаграмма</option>
+                            <option value="radar" {% if current_chart_type == 'radar' %}selected{% endif %}>Радар диаграммасы</option>
+                            <option value="polarArea" {% if current_chart_type == 'polarArea' %}selected{% endif %}>Полярлық диаграмма</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-success">🔍 Қолдану</button>
+                    <button type="button" class="btn btn-primary" onclick="resetFilters()">🗑️ Тазарту</button>
+                </div>
+            </form>
+
+            {% if current_faculty or current_gender or current_age_range %}
+            <div class="active-filters">
+                {% if current_faculty %}
+                <div class="filter-tag">
+                    Факультет: {{ current_faculty }}
+                    <button onclick="removeFilter('faculty')">×</button>
+                </div>
+                {% endif %}
+                
+                {% if current_gender %}
+                <div class="filter-tag">
+                    Жынысы: {{ current_gender }}
+                    <button onclick="removeFilter('gender')">×</button>
+                </div>
+                {% endif %}
+                
+                {% if current_age_range %}
+                <div class="filter-tag">
+                    Жас: 
+                    {% if current_age_range == 'under_20' %}18-19 жас
+                    {% elif current_age_range == '20_25' %}20-25 жас
+                    {% else %}26+ жас{% endif %}
+                    <button onclick="removeFilter('age_range')">×</button>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Негізгі статистика -->
+        <div class="stats-overview">
+            <div class="stat-card glow">
+                <div class="stat-number">{{ total_students }}</div>
+                <div class="stat-label">Барлық студенттер</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ avg_age }}</div>
+                <div class="stat-label">Орташа жасы</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ faculty_stats|length }}</div>
+                <div class="stat-label">Факультеттер саны</div>
+            </div>
+        </div>
+
+    
+        <div class="charts-container">
+            <div class="main-chart-section">
+                <div class="main-chart-title">
+                    {% if current_chart_type == 'bar' %}📊 Бағанды диаграмма
+                    {% elif current_chart_type == 'pie' %}🥧 Дөңгелек диаграмма
+                    {% elif current_chart_type == 'line' %}📈 Сызықты график
+                    {% elif current_chart_type == 'doughnut' %}🍩 Сақиналы диаграмма
+                    {% elif current_chart_type == 'radar' %}🛰️ Радар диаграммасы
+                    {% else %}🎯 Полярлық диаграмма{% endif %}
+                </div>
+                <div class="main-chart-wrapper">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div class="chart-legend" id="mainChartLegend"></div>
+            </div>
+
+            <div class="side-charts">
+                <div class="mini-chart">
+                    <div class="mini-chart-title">👥 Жыныс бойынша</div>
+                    <div class="mini-chart-wrapper">
+                        <canvas id="genderChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="mini-chart">
+                    <div class="mini-chart-title">🎂 Жас топтары</div>
+                    <div class="mini-chart-wrapper">
+                        <canvas id="ageGroupChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="mini-chart">
+                    <div class="mini-chart-title">📊 Топтық таралу</div>
+                    <div class="mini-chart-wrapper">
+                        <canvas id="stackedChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="additional-charts">
+            <div class="chart-card">
+                <div class="chart-title">📈 Жас бойынша таралу</div>
+                <div class="chart-wrapper">
+                    <canvas id="ageDistributionChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">🎯 Факультеттер салыстырмасы</div>
+                <div class="chart-wrapper">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="last-update">
+            Соңғы жаңарту: <span id="currentTime"></span>
+            <span class="update-badge">
+                <span class="live-dot"></span>
+                Нақты уақыт
+            </span>
+        </div>
+    </div>
+
+    <script>
+        const colorPalettes = {
+            faculty: ['#6a11cb', '#2575fc', '#00b09b', '#ff8c00', '#ff416c', '#17a2b8', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'],
+            gender: ['#36A2EB', '#FF6384', '#FFCE56'],
+            age: ['#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+            sequential: ['#ff6b6b', '#ff8e8e', '#ffb1b1', '#ffd4d4', '#fff7f7']
+        };
+        
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('kk-KZ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeStr;
+        }
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 1000);
+        
+        // Легенд құру
+        function createLegend(containerId, labels, colors) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            labels.forEach((label, index) => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.innerHTML = `
+                    <div class="legend-color" style="background-color: ${colors[index % colors.length]}"></div>
+                    <span>${label}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        // 1. НЕҒІЗГІ ДИАГРАММА
+        const mainCtx = document.getElementById('mainChart').getContext('2d');
+        const chartType = '{{ current_chart_type }}';
+        
+        const facultyLabels = [{% for faculty, count in faculty_stats %}'{{ faculty }}',{% endfor %}];
+        const facultyData = [{% for faculty, count in faculty_stats %}{{ count }},{% endfor %}];
+        
+        const mainChart = new Chart(mainCtx, {
+            type: chartType,
+            data: {
+                labels: facultyLabels,
+                datasets: [{
+                    label: 'Студенттер саны',
+                    data: facultyData,
+                    backgroundColor: colorPalettes.faculty,
+                    borderColor: chartType === 'line' || chartType === 'radar' ? colorPalettes.faculty.map(c => c + 'CC') : 'rgba(255, 255, 255, 0.8)',
+                    borderWidth: chartType === 'line' ? 3 : 2,
+                    fill: chartType === 'line' || chartType === 'radar',
+                    tension: chartType === 'line' ? 0.4 : 0,
+                    pointRadius: chartType === 'line' ? 5 : 0,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea',
+                        position: 'right',
+                        labels: {
+                            font: { size: 13, weight: '700' },
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                        titleFont: { size: 14, weight: '700' },
+                        bodyFont: { size: 14, weight: '600' },
+                        padding: 15,
+                        cornerRadius: 10,
+                        displayColors: true
+                    }
+                },
+                scales: chartType !== 'pie' && chartType !== 'doughnut' && chartType !== 'polarArea' ? {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: { font: { size: 12, weight: '700' }, padding: 10 }
+                    },
+                    x: {
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: { font: { size: 12, weight: '700' }, padding: 10 }
+                    }
+                } : {}
+            }
+        });
+        
+        createLegend('mainChartLegend', facultyLabels, colorPalettes.faculty);
+        
+        // 2. ЖЫНЫС БОЙЫНША ДИАГРАММА
+        const genderCtx = document.getElementById('genderChart').getContext('2d');
+        const genderLabels = [{% for gender, count in gender_stats %}'{{ gender }}',{% endfor %}];
+        const genderData = [{% for gender, count in gender_stats %}{{ count }},{% endfor %}];
+        
+        new Chart(genderCtx, {
+            type: 'doughnut',
+            data: {
+                labels: genderLabels,
+                datasets: [{
+                    data: genderData,
+                    backgroundColor: colorPalettes.gender,
+                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                    borderWidth: 3,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = genderData.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((context.raw / total) * 100);
+                                return `${context.label}: ${context.raw} студент (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 3. ЖАС ТОПТАРЫ БОЙЫНША ДИАГРАММА
+        const ageGroupCtx = document.getElementById('ageGroupChart').getContext('2d');
+        const ageGroupLabels = [{% for age_group, count in age_stats %}'{{ age_group }}',{% endfor %}];
+        const ageGroupData = [{% for age_group, count in age_stats %}{{ count }},{% endfor %}];
+        
+        new Chart(ageGroupCtx, {
+            type: 'pie',
+            data: {
+                labels: ageGroupLabels,
+                datasets: [{
+                    data: ageGroupData,
+                    backgroundColor: colorPalettes.age,
+                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        
+        // 4. ЖАС БОЙЫНША ТАРАЛУ ДИАГРАММАСЫ
+        const ageDistributionCtx = document.getElementById('ageDistributionChart').getContext('2d');
+        const ageLabels = [{% for age, count in age_histogram %}{{ age }},{% endfor %}];
+        const ageCounts = [{% for age, count in age_histogram %}{{ count }},{% endfor %}];
+        
+        new Chart(ageDistributionCtx, {
+            type: 'line',
+            data: {
+                labels: ageLabels,
+                datasets: [{
+                    label: 'Студенттер саны',
+                    data: ageCounts,
+                    backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                    borderColor: '#4ECDC4',
+                    borderWidth: 4,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#4ECDC4',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    }
+                }
+            }
+        });
+        
+        // 5. САЛЫСТЫРМА ДИАГРАММАСЫ
+        const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+        
+        // Ерлер мен әйелдер бойынша деректерді бөлу
+        const maleData = [];
+        const femaleData = [];
+        
+        // Бұл мысалдық деректер, нақты деректер базадан алу керек
+        facultyLabels.forEach((faculty, index) => {
+            // Әр факультет үшін шамамен 60% ер, 40% әйел деп есептейміз
+            const total = facultyData[index];
+            maleData.push(Math.round(total * 0.6));
+            femaleData.push(Math.round(total * 0.4));
+        });
+        
+        new Chart(comparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: facultyLabels,
+                datasets: [
+                    {
+                        label: 'Ер',
+                        data: maleData,
+                        backgroundColor: '#36A2EB',
+                        borderColor: '#36A2EB',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Әйел',
+                        data: femaleData,
+                        backgroundColor: '#FF6384',
+                        borderColor: '#FF6384',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    }
+                }
+            }
+        });
+        
+        // 6. ТОПТЫҚ ТАРАЛУ ДИАГРАММАСЫ
+        const stackedCtx = document.getElementById('stackedChart').getContext('2d');
+        
+        new Chart(stackedCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Факультеттер'],
+                datasets: facultyLabels.map((faculty, index) => ({
+                    label: faculty,
+                    data: [facultyData[index]],
+                    backgroundColor: colorPalettes.faculty[index % colorPalettes.faculty.length],
+                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                    borderWidth: 1
+                }))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { 
+                        stacked: true,
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        
+        // Фильтр функциялары
+        function resetFilters() {
+            window.location.href = '/statistics';
+        }
+        
+        function removeFilter(filterName) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete(filterName);
+            window.location.href = url.toString();
+        }
+        
+        setInterval(() => {
+            const shouldReload = confirm('Статистиканы жаңартқыңыз келе ме?');
+            if (shouldReload) {
+                window.location.reload();
+            }
+        }, 300000);
+        
+        document.querySelectorAll('canvas').forEach((canvas, index) => {
+            canvas.style.opacity = '0';
+            canvas.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                canvas.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                canvas.style.opacity = '1';
+                canvas.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+        
+        const liveDot = document.querySelector('.live-dot');
+        setInterval(() => {
+            liveDot.style.backgroundColor = liveDot.style.backgroundColor === 'red' ? '#00ff00' : 'red';
+        }, 1000);
+    </script>
+</body>
+</html>

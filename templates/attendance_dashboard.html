@@ -1,0 +1,11 @@
+{% extends 'attendance_base.html' %}
+{% block content %}
+<h1>{% if is_student %}Менің сабақтарым{% else %}Қатысуды басқару{% endif %}</h1>
+{% if is_student %}
+<p class="lead">Телефон камерасымен мұғалім көрсеткен QR-кодты сканерлеңіз. Белгі тек сабақтың белгіленген уақытында қабылданады.</p>
+{% if sessions %}<div class="cards">{% for s in sessions %}<article class="card"><h2>{{ s.course }}</h2><p>{{ s.group_name }} · мұғалім: {{ s.teacher }}</p><p>{{ s.starts_at|replace('T',' ') }} — {{ s.ends_at|replace('T',' ') }}</p>{% if s.marked_at %}<span class="pill ok">Қатысты · {{ s.marked_at|replace('T',' ') }}</span>{% else %}<span class="pill">Белгі жоқ</span>{% endif %}</article>{% endfor %}</div>{% else %}<div class="card">Сіздің тобыңызға сабақ әлі жоспарланбаған.</div>{% endif %}
+{% else %}
+<section class="card"><h2>Жаңа сабақ ашу</h2>{% if courses %}<form class="form-grid" method="post" action="{{ url_for('attendance.create_session') }}"><label>Курс<select name="course_id" required>{% for c in courses %}<option value="{{ c.id }}">{{ c.name }} — {{ c.group_name }}</option>{% endfor %}</select></label><label>Басталу уақыты<input type="datetime-local" name="starts_at" required></label><label>Аяқталу уақыты<input type="datetime-local" name="ends_at" required></label><button class="button">Сабақ ашу және QR жасау</button></form>{% else %}<p>Сізге бекітілген курс жоқ. Әкімші курс қоса алады.</p>{% endif %}</section>
+<h2>Сабақтар</h2>{% if sessions %}<div class="cards">{% for s in sessions %}<article class="card"><h3>{{ s.course }} · {{ s.group_name }}</h3><p>{{ s.starts_at|replace('T',' ') }} — {{ s.ends_at|replace('T',' ') }}</p><p>Белгіленген студент: {{ s.present_count }}</p><a class="button secondary" href="{{ url_for('attendance.session_detail', session_id=s.id) }}">QR мен тізімді ашу</a></article>{% endfor %}</div>{% else %}<p>Сабақ әлі жоқ.</p>{% endif %}
+{% endif %}
+{% endblock %}
