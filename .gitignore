@@ -1,6 +1,5 @@
 .env
 .env.*
-!.env.example
 .vercel/
 .venv/
 venv/
@@ -13,3 +12,4 @@ __pycache__/
 .DS_Store
 .vercel
 .env*
+!.env.example

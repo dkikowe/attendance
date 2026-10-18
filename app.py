@@ -16,6 +16,8 @@ app = Flask(__name__)
 IS_PRODUCTION = os.getenv('VERCEL') == '1' or os.getenv('APP_ENV') == 'production'
 if IS_PRODUCTION and not os.getenv('SECRET_KEY'):
     raise RuntimeError('Set SECRET_KEY in the production environment.')
+if IS_PRODUCTION and not os.getenv('TURSO_DATABASE_URL'):
+    raise RuntimeError('Connect persistent storage before deploying attendance. Local SQLite is only supported in development.')
 app.secret_key = os.getenv('SECRET_KEY') or os.urandom(32)
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax', SESSION_COOKIE_SECURE=IS_PRODUCTION)
 app.config['PUBLIC_BASE_URL'] = os.getenv('PUBLIC_BASE_URL', '')
