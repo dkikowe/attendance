@@ -13,3 +13,6 @@ __pycache__/
 .vercel
 .env*
 !.env.example
+.agents/
+.claude/
+skills-lock.json

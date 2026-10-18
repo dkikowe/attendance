@@ -4,3 +4,4 @@ python-dotenv>=1.0
 tzdata>=2024.1
 pytest>=8.0
 zxing-cpp>=2.2
+libsql==0.1.11

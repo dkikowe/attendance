@@ -26,12 +26,20 @@ Vercel project
   Framework: Flask (app.py)
   Python: 3.12
 
-Production provisioning is in progress. Persistent storage must be connected
-before release: a serverless deployment cannot use a writable students.db
-in the source bundle. The original student database stays on the local machine;
-the cloud site starts with a separate database. Do not copy it into public Git.
+Production uses the linked Turso cloud database (attendance-db, Starter).
+All queries use remote libSQL; the deployed function never writes a local DB.
+The original student database stays on the local machine. The cloud site
+starts with a separate database and secure initial admin/teacher/user accounts.
+Never copy students.db or .env.local into public Git.
+
+Provisioned credentials are read automatically from .env.local in development,
+or from Vercel environment variables in production. Schema/bootstrap changes
+run explicitly with python manage.py init-db after the correct environment has
+been loaded. Production cold starts do not run migrations or seed accounts.
 
 Production environment variables
+  TURSO_DATABASE_URL         Required, injected by Vercel Marketplace
+  TURSO_AUTH_TOKEN           Required, injected by Vercel Marketplace
   SECRET_KEY                 Required, stable random session signing key
   BOOTSTRAP_ADMIN_PASSWORD   Optional initial admin account password
   BOOTSTRAP_TEACHER_PASSWORD Optional initial teacher account password

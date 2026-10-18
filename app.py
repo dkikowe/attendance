@@ -8,15 +8,17 @@ from attendance import attendance_bp, init_attendance_db
 from network import phone_base_url
 from zoneinfo import ZoneInfo
 from passwords import hash_password, verify_password
+from database import connect
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'students.db')
+load_dotenv(os.path.join(BASE_DIR, '.env.local'))
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 app = Flask(__name__)
 IS_PRODUCTION = os.getenv('VERCEL') == '1' or os.getenv('APP_ENV') == 'production'
 if IS_PRODUCTION and not os.getenv('SECRET_KEY'):
     raise RuntimeError('Set SECRET_KEY in the production environment.')
-if IS_PRODUCTION and not os.getenv('TURSO_DATABASE_URL'):
+if IS_PRODUCTION and not (os.getenv('TURSO_DATABASE_URL') and os.getenv('TURSO_AUTH_TOKEN')):
     raise RuntimeError('Connect persistent storage before deploying attendance. Local SQLite is only supported in development.')
 app.secret_key = os.getenv('SECRET_KEY') or os.urandom(32)
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax', SESSION_COOKIE_SECURE=IS_PRODUCTION)
@@ -26,7 +28,7 @@ ZoneInfo(app.config['ATTENDANCE_TIMEZONE'])
 app.register_blueprint(attendance_bp)
 
 def upgrade_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = connect(DB_PATH)
     cursor = conn.cursor()
     
     try:
@@ -56,7 +58,7 @@ def init_db():
     if not os.path.exists(os.path.join(BASE_DIR, 'templates')):
         os.makedirs(os.path.join(BASE_DIR, 'templates'))
     
-    conn = sqlite3.connect(DB_PATH)
+    conn = connect(DB_PATH)
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -118,7 +120,7 @@ def init_db():
     ]
     for username, role, key, demo_password, faculty in accounts:
         password = os.getenv(key) or (demo_password if not IS_PRODUCTION else None)
-        if password:
+        if password and not cursor.execute('SELECT id FROM users WHERE username=?', (username,)).fetchone():
             cursor.execute(
                 'INSERT OR IGNORE INTO users(username,password,role,faculty) VALUES(?,?,?,?)',
                 (username, hash_password(password), role, faculty),
@@ -131,8 +133,11 @@ def init_db():
     upgrade_db()
     print("✅ База дайын!")
 
-init_db()
-init_attendance_db()
+# Cloud schema changes run explicitly with manage.py; cold starts only serve
+# requests, avoiding repeated writes and concurrent schema migrations.
+if not IS_PRODUCTION:
+    init_db()
+    init_attendance_db()
 
 PERMISSIONS = {
     'admin': {
@@ -176,7 +181,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
             "SELECT * FROM users WHERE username = ?",
@@ -229,7 +234,7 @@ def students_list():
         faculty = request.args.get('faculty', '')
         search_query = request.args.get('search', '')
         
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         
         # Негізгі сұрау
@@ -286,7 +291,7 @@ def students_list():
 def view_student_details(student_id):  # ИЗМЕНЕНО ИМЯ
     """Студентті толық қарау"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
         student = cursor.fetchone()
@@ -314,7 +319,7 @@ def edit_student_page(student_id):  # ИЗМЕНЕНО ИМЯ
         return redirect('/students')
     
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         
         if request.method == 'POST':
@@ -374,7 +379,7 @@ def delete_student_action(student_id):  # ИЗМЕНЕНО ИМЯ
         return redirect('/students')
     
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute("SELECT name FROM students WHERE id = ?", (student_id,))
@@ -413,7 +418,7 @@ def add_student():
         current_year = datetime.now().year
         age = current_year - birth_year
         
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO students (name, gender, birthdate, age, faculty, phone, email, iin, created_by)
@@ -446,7 +451,7 @@ def api_edit_student(student_id):
         current_year = datetime.now().year
         age = current_year - birth_year
         
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute('''
             UPDATE students 
@@ -469,7 +474,7 @@ def delete_student(student_id):
         return jsonify({'success': False, 'message': 'Студентті жоюға рұқсат жоқ! ⚠️'})
     
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute("SELECT name FROM students WHERE id = ?", (student_id,))
@@ -495,7 +500,7 @@ def manage_faculties():
         return redirect('/students')
     
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM faculties ORDER BY name")
         faculties = cursor.fetchall()
@@ -523,7 +528,7 @@ def add_faculty():
         if not name.strip():
             return jsonify({'success': False, 'message': 'Факультет атын енгізіңіз! 📝'})
         
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO faculties (name, description, created_by) VALUES (?, ?, ?)",
@@ -545,7 +550,7 @@ def delete_faculty(faculty_id):
         return jsonify({'success': False, 'message': 'Факультет жоюға рұқсат жоқ! ⚠️'})
     
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute("SELECT name FROM faculties WHERE id = ?", (faculty_id,))
@@ -568,7 +573,7 @@ def delete_faculty(faculty_id):
 def statistics():
     """Статистика беті с фильтрами"""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
         
         faculty_filter = request.args.get('faculty', '')
@@ -707,7 +712,7 @@ def ask_ai():
         # 1. DATABASE
         # =========================
 
-        conn = sqlite3.connect(DB_PATH)
+        conn = connect(DB_PATH)
         cursor = conn.cursor()
 
         cursor.execute("""

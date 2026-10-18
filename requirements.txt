@@ -5,3 +5,4 @@ python-dotenv>=1.0
 qrcode[pil]>=8.0
 google-genai>=1.0
 tzdata>=2024.1
+libsql==0.1.11

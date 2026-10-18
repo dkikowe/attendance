@@ -7,6 +7,7 @@ import qrcode
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, send_file, session, url_for
 from network import phone_base_url
 from passwords import hash_password
+from database import connect
 
 attendance_bp = Blueprint('attendance', __name__)
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'students.db')
@@ -17,7 +18,7 @@ def attendance_now():
 
 @contextmanager
 def db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute('PRAGMA foreign_keys=ON')
     try:

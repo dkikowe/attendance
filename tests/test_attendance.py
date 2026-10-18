@@ -20,8 +20,12 @@ SOURCE = Path(__file__).resolve().parents[1]
 
 @pytest.fixture(scope='session')
 def site(tmp_path_factory):
+    # Never connect tests to a provisioned cloud database.
+    import os
+    for key in ('TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN', 'VERCEL', 'APP_ENV'):
+        os.environ.pop(key, None)
     runtime = tmp_path_factory.mktemp('qr_site')
-    for name in ('app.py', 'attendance.py', 'network.py', 'passwords.py'):
+    for name in ('app.py', 'attendance.py', 'network.py', 'passwords.py', 'database.py'):
         shutil.copy2(SOURCE / name, runtime / name)
     shutil.copytree(SOURCE / 'templates', runtime / 'templates')
     sys.path.insert(0, str(runtime))
