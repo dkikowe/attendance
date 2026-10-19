@@ -3,6 +3,6 @@ openai>=1.0
 openpyxl>=3.1
 python-dotenv>=1.0
 qrcode[pil]>=8.0
-google-genai>=1.0
+google-genai>=2.31.0,<3
 tzdata>=2024.1
 libsql==0.1.11

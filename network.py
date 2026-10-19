@@ -34,16 +34,16 @@ def phone_base_url(request_url, configured_url=''):
     if (parsed.scheme not in ('http', 'https') or not parsed.hostname
             or parsed.username is not None or parsed.password is not None
             or parsed.query or parsed.fragment or parsed.path not in ('', '/')):
-        raise ValueError('PUBLIC_BASE_URL: http(s)://IP:порт немесе домен енгізіңіз (жолсыз).')
+        raise ValueError('PUBLIC_BASE_URL must be an http(s) address or domain without a path.')
     try:
         port = parsed.port
     except ValueError:
-        raise ValueError('PUBLIC_BASE_URL: порт дұрыс емес.') from None
+        raise ValueError('PUBLIC_BASE_URL has an invalid port.') from None
     if not is_local_only(parsed.hostname):
         return source.rstrip('/')
     if configured_url.strip():
-        raise ValueError('PUBLIC_BASE_URL ішінде localhost/127.0.0.1 орнына телефоннан ашылатын мекенжайды енгізіңіз.')
+        raise ValueError('PUBLIC_BASE_URL must be reachable from a phone; localhost and loopback addresses are not supported.')
     address = lan_ip()
     if not address:
-        raise ValueError('Желі мекенжайы табылмады. Wi-Fi қосып, сайтты компьютердің Wi-Fi IP мекенжайымен ашыңыз немесе PUBLIC_BASE_URL орнатыңыз.')
+        raise ValueError('No network address found. Connect to Wi-Fi or configure PUBLIC_BASE_URL with a reachable address.')
     return '{}://{}{}'.format(parsed.scheme, address, ':' + str(port) if port else '')

@@ -8,6 +8,7 @@ from flask import Blueprint, abort, current_app, flash, redirect, render_templat
 from network import phone_base_url
 from passwords import hash_password
 from database import connect
+from localization import english_label
 
 attendance_bp = Blueprint('attendance', __name__)
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'students.db')
@@ -54,7 +55,7 @@ def logged(view):
     def wrapped(*a,**kw):
         if not session.get('user_id'):
             session['next_after_login'] = request.path
-            flash('Алдымен жүйеге кіріңіз. QR-белгілеу кіруден кейін жалғасады.','error')
+            flash('Please sign in first. QR check-in will continue after sign-in.','error')
             return redirect(url_for('login'))
         return view(*a,**kw)
     return wrapped
@@ -102,17 +103,17 @@ def register_student():
         name=request.form.get('username','').strip(); password=request.form.get('password','')
         try: gid=int(request.form.get('group_id',''))
         except ValueError: gid=0
-        if len(name)<3 or len(password)<8: flash('Логин кемінде 3 таңба, құпиясөз кемінде 8 таңба болуы керек.','error')
+        if len(name)<3 or len(password)<8: flash('The username must have at least 3 characters and the password at least 8 characters.','error')
         else:
             try:
                 with db() as c:
                     if not c.execute('SELECT id FROM attendance_groups WHERE id=?',(gid,)).fetchone():
-                        flash('Топты таңдаңыз.','error')
+                        flash('Select a group.','error')
                     else:
                         c.execute('INSERT INTO users(username,password,role,attendance_group_id) VALUES(?,?,?,?)',(name,hash_password(password),'user',gid))
-                        flash('Тіркелу аяқталды. Енді жүйеге кіріңіз.','success')
+                        flash('Registration complete. You can now sign in.','success')
                         return redirect(url_for('login'))
-            except sqlite3.IntegrityError: flash('Бұл логин бос емес.','error')
+            except sqlite3.IntegrityError: flash('That username is already taken.','error')
     with db() as c: groups=c.execute('SELECT id,name FROM attendance_groups ORDER BY name').fetchall()
     return render_template('attendance_register.html',groups=groups)
 
@@ -124,15 +125,15 @@ def manage_courses():
             with db() as c:
                 if request.form.get('action')=='group':
                     name=request.form.get('group_name','').strip()
-                    if not name: raise ValueError('Топ атауын енгізіңіз.')
-                    c.execute('INSERT INTO attendance_groups(name) VALUES(?)',(name,)); flash('Топ қосылды.','success')
+                    if not name: raise ValueError('Enter a group name.')
+                    c.execute('INSERT INTO attendance_groups(name) VALUES(?)',(name,)); flash('Group added.','success')
                 elif request.form.get('action')=='course':
                     name=request.form.get('course_name','').strip(); tid=int(request.form.get('teacher_id','')); gid=int(request.form.get('group_id',''))
-                    if not name: raise ValueError('Курс атауын енгізіңіз.')
-                    if not c.execute("SELECT id FROM users WHERE id=? AND role='teacher'",(tid,)).fetchone() or not c.execute('SELECT id FROM attendance_groups WHERE id=?',(gid,)).fetchone(): raise ValueError('Мұғалім мен топты таңдаңыз.')
-                    c.execute('INSERT INTO courses(name,teacher_id,group_id) VALUES(?,?,?)',(name,tid,gid)); flash('Курс қосылды.','success')
-                else: raise ValueError('Әрекетті таңдаңыз.')
-        except (ValueError,sqlite3.IntegrityError) as e: flash(str(e) or 'Мұндай жазба бұрыннан бар.','error')
+                    if not name: raise ValueError('Enter a course name.')
+                    if not c.execute("SELECT id FROM users WHERE id=? AND role='teacher'",(tid,)).fetchone() or not c.execute('SELECT id FROM attendance_groups WHERE id=?',(gid,)).fetchone(): raise ValueError('Select a teacher and a group.')
+                    c.execute('INSERT INTO courses(name,teacher_id,group_id) VALUES(?,?,?)',(name,tid,gid)); flash('Course added.','success')
+                else: raise ValueError('Select an action.')
+        except (ValueError,sqlite3.IntegrityError) as e: flash('This record already exists.' if isinstance(e, sqlite3.IntegrityError) else str(e) or 'Select valid values.','error')
         return redirect(url_for('attendance.manage_courses'))
     with db() as c:
         groups=c.execute('''SELECT g.id,g.name,COUNT(u.id) student_count FROM attendance_groups g LEFT JOIN users u ON u.attendance_group_id=g.id AND u.role='user' GROUP BY g.id ORDER BY g.name''').fetchall()
@@ -149,10 +150,10 @@ def create_session():
         with db() as c:
             course=c.execute('SELECT * FROM courses WHERE id=?',(cid,)).fetchone()
             if not course or (session.get('role')=='teacher' and course['teacher_id']!=session['user_id']): abort(403)
-            cur=c.execute('INSERT INTO class_sessions(course_id,teacher_id,starts_at,ends_at,token) VALUES(?,?,?,?,?)',(cid,session['user_id'],start.isoformat(timespec='minutes'),end.isoformat(timespec='minutes'),secrets.token_urlsafe(32)))
+            cur=c.execute('INSERT INTO class_sessions(course_id,teacher_id,starts_at,ends_at,token) VALUES(?,?,?,?,?)',(cid,course['teacher_id'],start.isoformat(timespec='minutes'),end.isoformat(timespec='minutes'),secrets.token_urlsafe(32)))
             sid=cur.lastrowid
         return redirect(url_for('attendance.session_detail',session_id=sid))
-    except (ValueError,TypeError): flash('Курс пен уақытты дұрыс толтырыңыз.','error'); return redirect(url_for('attendance.dashboard'))
+    except (ValueError,TypeError): flash('Choose a course and valid start and end times.','error'); return redirect(url_for('attendance.dashboard'))
 
 @attendance_bp.route('/attendance/session/<int:session_id>')
 @allow('teacher','admin')
@@ -187,27 +188,27 @@ def checkin(token):
     with db() as c:
         item=c.execute('SELECT s.*,c.name course,c.group_id FROM class_sessions s JOIN courses c ON c.id=s.course_id WHERE s.token=?',(token,)).fetchone()
         student=c.execute('SELECT attendance_group_id FROM users WHERE id=?',(session['user_id'],)).fetchone()
-        if not item: flash('QR-код табылмады.','error')
-        elif not student or item['group_id']!=student['attendance_group_id']: flash('Бұл QR-код сіздің тобыңызға арналмаған.','error')
-        elif now<datetime.fromisoformat(item['starts_at']) or now>datetime.fromisoformat(item['ends_at']): flash('QR-код уақыты әлі басталмады немесе аяқталды.','error')
+        if not item: flash('QR code not found.','error')
+        elif not student or item['group_id']!=student['attendance_group_id']: flash('This QR code is not for your group.','error')
+        elif now<datetime.fromisoformat(item['starts_at']) or now>datetime.fromisoformat(item['ends_at']): flash('The QR code is not active yet or has expired.','error')
         else:
             try:
                 c.execute('INSERT INTO attendance_records(session_id,student_id,marked_at) VALUES(?,?,?)',(item['id'],session['user_id'],now.isoformat(timespec='seconds')))
-                flash(f'Қатысу белгіленді: {item["course"]}.','success')
-            except sqlite3.IntegrityError: flash('Сіз бұл сабақта бұрын белгіленгенсіз.','info')
+                flash(f'Attendance recorded: {english_label(item["course"])}.','success')
+            except sqlite3.IntegrityError: flash('You have already checked in for this class.','info')
     return redirect(url_for('attendance.dashboard'))
 
 @attendance_bp.route('/attendance/report.csv')
 @allow('teacher','admin')
 def report_csv():
-    query='''SELECT c.name,g.name,s.starts_at,s.ends_at,u.username,a.marked_at,CASE WHEN a.id IS NULL THEN 'Жоқ' ELSE 'Қатысты' END
+    query='''SELECT c.name,g.name,s.starts_at,s.ends_at,u.username,a.marked_at,CASE WHEN a.id IS NULL THEN 'Absent' ELSE 'Present' END
     FROM class_sessions s JOIN courses c ON c.id=s.course_id JOIN attendance_groups g ON g.id=c.group_id
     JOIN users u ON u.role='user' AND u.attendance_group_id=c.group_id
     LEFT JOIN attendance_records a ON a.session_id=s.id AND a.student_id=u.id'''
     args=()
     if session.get('role')=='teacher': query+=' WHERE s.teacher_id=?'; args=(session['user_id'],)
     with db() as c: rows=c.execute(query+' ORDER BY s.starts_at DESC,g.name,u.username',args).fetchall()
-    out=io.StringIO(); writer=csv.writer(out); writer.writerow(['Курс','Топ','Басталуы','Аяқталуы','Студент логині','Белгі уақыты','Қатысу']); writer.writerows([tuple(r) for r in rows])
+    out=io.StringIO(); writer=csv.writer(out); writer.writerow(['Course','Group','Start','End','Student username','Check-in time','Attendance']); writer.writerows([(english_label(r[0]),english_label(r[1]),*tuple(r)[2:]) for r in rows])
     data=io.BytesIO(('\ufeff'+out.getvalue()).encode('utf-8'))
     return send_file(data,mimetype='text/csv; charset=utf-8',as_attachment=True,download_name='attendance_report.csv')
 

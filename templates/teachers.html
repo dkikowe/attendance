@@ -1,0 +1,27 @@
+{% extends 'attendance_base.html' %}
+{% block content %}
+<h1>Teachers</h1>
+<p class="lead">Create a teacher account, share the login details with your teacher, then assign a course.</p>
+<div class="cards">
+<section class="card"><h2>Add a teacher</h2>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label for="teacher-username">Username</label>
+<input id="teacher-username" name="username" minlength="3" maxlength="64" pattern="[A-Za-z0-9_.-]{3,64}" autocomplete="off" required>
+<p class="lead">3–64 letters, numbers, dots, underscores or hyphens.</p>
+<label for="teacher-password">Password</label>
+<input id="teacher-password" name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+<p class="lead">At least 8 characters. Give this password to the teacher so they can sign in.</p>
+<button class="button" type="submit">Create teacher</button>
+</form></section>
+<section class="card"><h2>Assign courses</h2>
+<p>After creating an account, select the teacher when adding a course under Groups / courses.</p>
+<p>The teacher can then sign in and create classes with QR attendance codes.</p>
+<a class="button secondary" href="{{ url_for('attendance.manage_courses') }}">Manage groups and courses</a>
+</section></div>
+<section class="card"><h2>Teacher accounts · {{ teachers|length }}</h2>
+<div class="table-wrap"><table><thead><tr><th>Username</th><th>Courses</th><th>Created</th></tr></thead><tbody>
+{% for t in teachers %}<tr><td>{{ t[1] }}</td><td>{{ t[3] }}</td><td>{{ t[2] or '—' }}</td></tr>
+{% else %}<tr><td colspan="3">No teachers yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

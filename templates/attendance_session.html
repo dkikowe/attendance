@@ -1,28 +1,28 @@
 {% extends 'attendance_base.html' %}
 {% block content %}
-<p><a href="{{ url_for('attendance.dashboard') }}">← Қатысу бөліміне қайту</a></p>
-<h1>{{ item.course }} · {{ item.group_name }}</h1>
-<p class="lead">QR жарамды уақыты: {{ item.starts_at|replace('T',' ') }} — {{ item.ends_at|replace('T',' ') }}</p>
-<p>Қазір: {{ server_now|replace('T',' ') }} ({{ config.ATTENDANCE_TIMEZONE }})</p>
+<p><a href="{{ url_for('attendance.dashboard') }}">← Back to attendance</a></p>
+<h1>{{ item.course|english }} · {{ item.group_name|english }}</h1>
+<p class="lead">QR code valid: {{ item.starts_at|replace('T',' ') }} — {{ item.ends_at|replace('T',' ') }}</p>
+<p>Now: {{ server_now|replace('T',' ') }} ({{ config.ATTENDANCE_TIMEZONE }})</p>
 {% if qr_error %}
 <div class="flash-error" role="alert">{{ qr_error }}</div>
 {% else %}
 <section class="card qr-card">
-  <img src="data:image/png;base64,{{ qr_data }}" alt="Сабаққа қатысуды белгілеу QR-коды">
+  <img src="data:image/png;base64,{{ qr_data }}" alt="Scan to record attendance">
   <div>
-    <h2>Студент QR-кодты телефон камерасымен сканерлейді</h2>
-    <p>Кірмеген студент үшін кіру беті ашылады. Кіргеннен кейін қатысу автоматты түрде белгіленеді.</p>
-    <p>Жергілікті сервер үшін телефон мен компьютер бір Wi-Fi желісінде болуы керек. Компьютер қосулы, сервер іске қосылған болуы керек.</p>
-    <p>Телефонда осы сілтеменің ашылатынын тексеріңіз:<br><a style="overflow-wrap:anywhere" href="{{ checkin_url }}">{{ checkin_url }}</a></p>
-    <p class="lead">Ашылмаса: компьютердің Wi-Fi IP мекенжайын, VPN және брандмауэрді тексеріңіз. Қате желі таңдалса, .env ішіндегі PUBLIC_BASE_URL мәнін орнатыңыз да серверді қайта іске қосыңыз.</p>
+    <h2>Students scan this QR code with their phone camera</h2>
+    <p>Students who are signed out will see the sign-in page. Attendance is recorded automatically after signing in.</p>
+    <p>Open the QR link on your phone during the lesson to record attendance.</p>
+    <p>You can also open this link on your phone:<br><a style="overflow-wrap:anywhere" href="{{ checkin_url }}">{{ checkin_url }}</a></p>
+    <p class="lead">If the link does not open, check your internet connection and try again.</p>
   </div>
 </section>
 {% endif %}
-<h2>Топ тізімі · {{ present_count }} қатысты, {{ absent_count }} қатыспады</h2>
-<p><a class="button secondary" href="{{ url_for('attendance.session_detail', session_id=item.id) }}">Тізімді жаңарту</a> — студент белгіленгеннен кейін басыңыз.</p>
+<h2>Group roster · {{ present_count }} present, {{ absent_count }} absent</h2>
+<p><a class="button secondary" href="{{ url_for('attendance.session_detail', session_id=item.id) }}">Refresh roster</a> — refresh after students check in.</p>
 {% if records %}
-<div class="table-wrap"><table><thead><tr><th>Студент</th><th>Қатысу күйі</th><th>Белгіленген уақыт</th></tr></thead><tbody>
-{% for r in records %}<tr><td>{{ r.username }}</td><td>{% if r.marked_at %}Қатысты{% else %}Қатыспады{% endif %}</td><td>{{ r.marked_at|replace('T',' ') if r.marked_at else '—' }}</td></tr>{% endfor %}
+<div class="table-wrap"><table><thead><tr><th>Student</th><th>Attendance status</th><th>Check-in time</th></tr></thead><tbody>
+{% for r in records %}<tr><td>{{ r.username }}</td><td>{% if r.marked_at %}Present{% else %}Absent{% endif %}</td><td>{{ r.marked_at|replace('T',' ') if r.marked_at else '—' }}</td></tr>{% endfor %}
 </tbody></table></div>
-{% else %}<p>Бұл топта тіркелген студент жоқ.</p>{% endif %}
+{% else %}<p>No students have registered for this group yet.</p>{% endif %}
 {% endblock %}

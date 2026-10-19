@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="kk">
+<html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>Жаңа студент қосу</title>
+    <title>Add a new student</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Segoe UI', sans-serif; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
@@ -22,10 +23,10 @@
 </head>
 <body>
     <div class="container">
-        <a href="/" class="back-btn"><span>⬅</span>Артқа қайту</a>
-        
-        <h1>🎓 Жаңа студент қосу</h1>
-        
+        <a href="/" class="back-btn"><span>⬅</span>Back</a>
+
+        <h1>🎓 Add a new student</h1>
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -33,63 +34,63 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
+
         <form method="POST" action="/add_student">
             <div class="form-group">
-                <label for="name">Аты-жөні:</label>
-                <input type="text" id="name" name="name" required placeholder="Мысалы: Айгерім Қайратқызы">
+                <label for="name">Full name:</label>
+                <input type="text" id="name" name="name" required placeholder="e.g. Alex Smith">
             </div>
-            
+
             <div class="form-group">
-                <label for="gender">Жынысы:</label>
+                <label for="gender">Gender:</label>
                 <select id="gender" name="gender" required>
-                    <option value="">Жынысын таңдаңыз</option>
-                    <option value="Әйел">Әйел</option>
-                    <option value="Ер">Ер</option>
+                    <option value="">Select gender</option>
+                    <option value="Әйел">Female</option>
+                    <option value="Ер">Male</option>
                 </select>
             </div>
-            
+
             <div class="form-group">
-                <label for="birthdate">Туған күні:</label>
+                <label for="birthdate">Date of birth:</label>
                 <input type="date" id="birthdate" name="birthdate" required>
             </div>
-            
+
             <div class="form-group">
-                <label for="faculty">Факультет:</label>
-                <input type="text" id="faculty" name="faculty" required placeholder="Мысалы: Информатика">
+                <label for="faculty">Faculty:</label>
+                <input type="text" id="faculty" name="faculty" required placeholder="e.g. Computer Science">
             </div>
-            
+
             <div class="form-group">
-                <label for="phone">Телефон нөмірі:</label>
-                <input type="tel" id="phone" name="phone" required placeholder="Мысалы: +7-777-123-45-67">
+                <label for="phone">Phone number:</label>
+                <input type="tel" id="phone" name="phone" required placeholder="e.g. +7-777-123-45-67">
             </div>
-            
+
             <div class="form-group">
-                <label for="email">Электронды пошта:</label>
-                <input type="email" id="email" name="email" required placeholder="Мысалы: student@university.kz">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required placeholder="e.g. student@university.kz">
             </div>
-            
-            <button type="submit" class="submit-btn">✅ Студентті қосу</button>
+
+            <button type="submit" class="submit-btn">✅ Add student</button>
         </form>
     </div>
-    
+
     <script>
         const today = new Date();
         const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
         document.getElementById('birthdate').max = maxDate.toISOString().split('T')[0];
-        
+
         document.getElementById('birthdate').addEventListener('change', function() {
             const birthDate = new Date(this.value);
             const today = new Date();
             let age = today.getFullYear() - birthDate.getFullYear();
             const monthDiff = today.getMonth() - birthDate.getMonth();
-            
+
             if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
                 age--;
             }
-            
+
             if (age < 16) {
-                alert('⚠️ Студенттің жасы кемінде 16 болуы керек!');
+                alert('⚠️ Students must be at least 16 years old.');
                 this.value = '';
             }
         });

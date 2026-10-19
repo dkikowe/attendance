@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="kk">
+<html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>Студенттер базасы</title>
+    <title>Student Management</title>
     <style>
         * {
             margin: 0;
@@ -40,7 +41,7 @@
             font-size: 1.1em;
             color: #7f8c8d;
         }
-        
+
         .controls {
             display: flex;
             justify-content: space-between;
@@ -86,7 +87,7 @@
         .btn-danger:hover { background: #c0392b; }
         .btn-info { background: #17a2b8; }
         .btn-info:hover { background: #138496; }
-        
+
         .user-info {
             display: flex;
             align-items: center;
@@ -106,7 +107,7 @@
         .user-badge.admin { border-color: #e74c3c; color: #e74c3c; }
         .user-badge.teacher { border-color: #f39c12; color: #f39c12; }
         .user-badge.user { border-color: #3498db; color: #3498db; }
-        
+
         .stats {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -133,7 +134,7 @@
             align-items: center;
             gap: 5px;
         }
-        
+
         .filter-section {
             background: white;
             padding: 20px;
@@ -179,7 +180,7 @@
             justify-content: flex-end;
             margin-top: 10px;
         }
-        
+
         .student-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -249,7 +250,7 @@
             padding: 8px 12px;
             font-size: 0.85em;
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -265,7 +266,7 @@
             margin-bottom: 10px;
             color: #2c3e50;
         }
-        
+
         .flash-messages {
             margin-bottom: 20px;
         }
@@ -283,7 +284,7 @@
             border-radius: 8px;
             border-left: 4px solid #dc3545;
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -304,7 +305,7 @@
             width: 90%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -325,7 +326,7 @@
             outline: none;
             border-color: #3498db;
         }
-        
+
         .active-filters {
             display: flex;
             gap: 10px;
@@ -349,7 +350,7 @@
             cursor: pointer;
             font-weight: bold;
         }
-        
+
         @media (max-width: 768px) {
             .container { padding: 15px; }
             .controls { flex-direction: column; }
@@ -361,10 +362,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎓 Студенттер базасы</h1>
-            <p>Оқу орнының студенттерін басқару жүйесі</p>
+            <h1>🎓 Student Management</h1>
+            <p>Student management and QR attendance</p>
         </div>
-        
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flash-messages">
@@ -374,18 +375,18 @@
                 </div>
             {% endif %}
         {% endwith %}
-        
+
         <div class="stats">
             <div class="stats-main">
                 {% if students %}
-                    📊 Барлығы: {{ students|length }} студент
+                    📊 Total: {{ students|length }} students
                 {% else %}
-                    📊 Студенттер жоқ
+                    📊 No students yet
                 {% endif %}
             </div>
             <div class="stats-details">
                 {% if faculty %}
-                <div class="stat-item">🎓 {{ faculty }}</div>
+                <div class="stat-item">🎓 {{ faculty|english }}</div>
                 {% endif %}
                 <div class="stat-item">
                     {% if role == 'admin' %}👑{% elif role == 'teacher' %}👨‍🏫{% else %}👤{% endif %}
@@ -393,69 +394,70 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="controls">
             <div class="main-buttons">
-                <a href="/students" class="btn btn-primary">🏠 Негізгі бет</a>
-                
+                <a href="/students" class="btn btn-primary">🏠 Home</a>
+
                 {% if permissions.can_add_student %}
-                <button class="btn btn-success" onclick="showAddForm()">➕ Жаңа студент</button>
-                {% endif %}
-                
-                {% if permissions.can_add_faculty %}
-                <a href="/faculties" class="btn btn-warning">🎓 Факультеттер</a>
+                <button class="btn btn-success" onclick="showAddForm()">➕ New student</button>
                 {% endif %}
 
-         <a href="/attendance" class="btn btn-info">📷 QR қатысу</a>
-          <a href="/statistics" class="btn btn-info">📊 Интерактивті статистика</a>
-          <a href="/ai_assistant" class="btn btn-ai">🤖 AI Көмекші</a>
+                {% if permissions.can_add_faculty %}
+                <a href="/teachers" class="btn btn-primary">👩‍🏫 Teachers</a>
+            <a href="/faculties" class="btn btn-warning">🎓 Faculties</a>
+                {% endif %}
+
+         <a href="/attendance" class="btn btn-info">📷 QR attendance</a>
+          <a href="/statistics" class="btn btn-info">📊 Interactive statistics</a>
+          <a href="/ai_assistant" class="btn btn-ai">🤖 AI Assistant</a>
             </div>
-            
+
             <div class="user-info">
                 <div class="user-badge {{ role }}">
                     {% if role == 'admin' %}👑{% elif role == 'teacher' %}👨‍🏫{% else %}👤{% endif %}
                     {{ username }}
                 </div>
-                <a href="/logout" class="btn btn-danger">🚪 Шығу</a>
+                <a href="/logout" class="btn btn-danger">🚪 Sign out</a>
             </div>
         </div>
 
         <div class="filter-section">
             <form action="/students" method="GET" class="filter-row" id="filterForm">
                 <div class="filter-group">
-                    <label class="filter-label">👥 Жынысы</label>
+                    <label class="filter-label">👥 Gender</label>
                     <select name="gender" class="filter-select" id="genderSelect">
-                        <option value="">Барлығы</option>
-                        <option value="Әйел" {% if filter_gender == 'Әйел' %}selected{% endif %}>Әйел</option>
-                        <option value="Ер" {% if filter_gender == 'Ер' %}selected{% endif %}>Ер</option>
+                        <option value="">All</option>
+                        <option value="Әйел" {% if filter_gender == 'Әйел' %}selected{% endif %}>Female</option>
+                        <option value="Ер" {% if filter_gender == 'Ер' %}selected{% endif %}>Male</option>
                     </select>
                 </div>
-                
+
                 <div class="filter-group">
-                    <label class="filter-label">🎂 Жас минимум</label>
-                    <input type="number" name="age_min" class="filter-input" 
+                    <label class="filter-label">🎂 Minimum age</label>
+                    <input type="number" name="age_min" class="filter-input"
                            placeholder="16" value="{{ filter_age_min or '' }}" min="16" max="60" id="ageMin">
                 </div>
-                
+
                 <div class="filter-group">
-                    <label class="filter-label">🎂 Жас максимум</label>
-                    <input type="number" name="age_max" class="filter-input" 
+                    <label class="filter-label">🎂 Maximum age</label>
+                    <input type="number" name="age_max" class="filter-input"
                            placeholder="30" value="{{ filter_age_max or '' }}" min="16" max="60" id="ageMax">
                 </div>
-                
+
                 <div class="filter-group">
-                    <label class="filter-label">🎓 Факультеті</label>
+                    <label class="filter-label">🎓 Faculty</label>
                     <select name="faculty" class="filter-select" id="facultySelect">
-                        <option value="">Барлығы</option>
+                        <option value="">All</option>
                         {% for faculty in faculties %}
-                        <option value="{{ faculty }}" {% if filter_faculty == faculty %}selected{% endif %}>{{ faculty }}</option>
+                        <option value="{{ faculty }}" {% if filter_faculty == faculty %}selected{% endif %}>{{ faculty|english }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">🔍 Фильтрлеу</button>
-                    <button type="button" class="btn" onclick="resetFilters()">🗑️ Тазарту</button>
+                    <button type="submit" class="btn btn-primary">🔍 Apply filters</button>
+                    <button type="button" class="btn" onclick="resetFilters()">🗑️ Clear</button>
                 </div>
             </form>
 
@@ -463,28 +465,28 @@
             <div class="active-filters">
                 {% if filter_gender %}
                 <div class="filter-tag">
-                    Жынысы: {{ filter_gender }}
+                    Gender: {{ filter_gender|english }}
                     <button onclick="removeFilter('gender')">×</button>
                 </div>
                 {% endif %}
-                
+
                 {% if filter_age_min %}
                 <div class="filter-tag">
-                    Жас мин: {{ filter_age_min }}
+                    Min. age: {{ filter_age_min }}
                     <button onclick="removeFilter('age_min')">×</button>
                 </div>
                 {% endif %}
-                
+
                 {% if filter_age_max %}
                 <div class="filter-tag">
-                    Жас макс: {{ filter_age_max }}
+                    Max. age: {{ filter_age_max }}
                     <button onclick="removeFilter('age_max')">×</button>
                 </div>
                 {% endif %}
-                
+
                 {% if filter_faculty %}
                 <div class="filter-tag">
-                    Факультет: {{ filter_faculty }}
+                    Faculty: {{ filter_faculty|english }}
                     <button onclick="removeFilter('faculty')">×</button>
                 </div>
                 {% endif %}
@@ -495,17 +497,17 @@
         <div class="filter-section">
             <form action="/students" method="GET" style="display: flex; gap: 10px; align-items: end;">
                 <div style="flex: 1;">
-                    <label class="filter-label">🔍 Іздеу</label>
-                    <input type="text" name="search" class="filter-input" 
-                           placeholder="Студент аты немесе факультеті бойынша іздеу..." 
+                    <label class="filter-label">🔍 Search</label>
+                    <input type="text" name="search" class="filter-input"
+                           placeholder="Search by student name, faculty or email..."
                            value="{{ search_query or '' }}">
                 </div>
                 <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">Іздеу</button>
+                    <button type="submit" class="btn btn-primary">Search</button>
                 </div>
             </form>
         </div>
-        
+
         {% if students %}
             <div class="student-grid">
                 {% for student in students %}
@@ -518,28 +520,28 @@
                             <div class="student-name">{{ student[1] }}</div>
                             <div class="student-details">
                                 <div class="student-detail">
-                                    <span>{% if student[2] == 'Әйел' %}👩 Әйел{% else %}👨 Ер{% endif %}</span>
+                                    <span>{% if student[2] == 'Әйел' %}👩 Female{% else %}👨 Male{% endif %}</span>
                                 </div>
                                 <div class="student-detail">
-                                    <span>🎂 {{ student[3] }} жас</span>
+                                    <span>🎂 {{ student[3] }} years</span>
                                 </div>
                                 <div class="student-detail">
-                                    <span>🎓 {{ student[4] }}</span>
+                                    <span>🎓 {{ student[4]|english }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="student-actions">
-                        <!-- ИСПРАВЛЕННЫЕ ССЫЛКИ -->
-                        <a href="/student/{{ student[0] }}" class="btn btn-primary">👁️ Қарау</a>
-                        
+
+                        <a href="/student/{{ student[0] }}" class="btn btn-primary">👁️ View</a>
+
                         {% if permissions.can_edit_student %}
-                        <a href="/student/edit/{{ student[0] }}" class="btn btn-warning">✏️ Өзгерту</a>
+                        <a href="/student/edit/{{ student[0] }}" class="btn btn-warning">✏️ Edit</a>
                         {% endif %}
-                        
+
                         {% if permissions.can_delete_student %}
-                        <button class="btn btn-danger" onclick="confirmDelete({{ student[0] }}, '{{ student[1] }}')">
-                            🗑️ Жою
+                        <button class="btn btn-danger" onclick="confirmDelete({{ student[0] }}, {{ student[1]|tojson|forceescape }})">
+                            🗑️ Delete
                         </button>
                         {% endif %}
                     </div>
@@ -549,78 +551,78 @@
         {% else %}
             <div class="empty-state">
                 <div>📭</div>
-                <h3>Студенттер табылмады</h3>
-                <p>Студенттер жоқ немесе іздеу шартына сәйкес келмеді</p>
-                <a href="/students" class="btn btn-primary" style="margin-top: 20px;">Барлық студенттерді көрсету</a>
+                <h3>No students found</h3>
+                <p>No students match your search or filters.</p>
+                <a href="/students" class="btn btn-primary" style="margin-top: 20px;">Show all students</a>
             </div>
         {% endif %}
     </div>
 
-    <!-- Модальное окно добавления студента -->
+
     <div id="addModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-bottom: 20px; color: #2c3e50;">➕ Жаңа студент</h3>
+            <h3 style="margin-bottom: 20px; color: #2c3e50;">➕ New student</h3>
             <form id="addStudentForm">
                 <div class="form-group">
-                    <label class="form-label">Аты-жөні</label>
+                    <label class="form-label">Full name</label>
                     <input type="text" name="name" class="form-input" required>
                 </div>
-                
+
                 <div class="form-group">
-                    <label class="form-label">Жынысы</label>
+                    <label class="form-label">Gender</label>
                     <select name="gender" class="form-select" required>
-                        <option value="">Таңдаңыз</option>
-                        <option value="Әйел">Әйел</option>
-                        <option value="Ер">Ер</option>
+                        <option value="">Select</option>
+                        <option value="Әйел">Female</option>
+                        <option value="Ер">Male</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
-                    <label class="form-label">Туған күні</label>
+                    <label class="form-label">Date of birth</label>
                     <input type="date" name="birthdate" class="form-input" required>
                 </div>
-                
+
                 <div class="form-group">
-                    <label class="form-label">Факультеті</label>
+                    <label class="form-label">Faculty</label>
                     <select name="faculty" class="form-select" required>
-                        <option value="">Таңдаңыз</option>
+                        <option value="">Select</option>
                         {% for faculty in faculties %}
-                        <option value="{{ faculty }}">{{ faculty }}</option>
+                        <option value="{{ faculty }}">{{ faculty|english }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <div class="form-group">
-                    <label class="form-label">Телефон</label>
+                    <label class="form-label">Phone</label>
                     <input type="tel" name="phone" class="form-input" required placeholder="+7-777-123-45-67">
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">Email</label>
                     <input type="email" name="email" class="form-input" required>
                 </div>
-                
+
                 <div class="form-group">
-                    <label class="form-label">ЖСН (IIN)</label>
+                    <label class="form-label">National ID (IIN)</label>
                     <input type="text" name="iin" class="form-input" required placeholder="123456789012">
                 </div>
-                
+
                 <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" class="btn btn-primary" onclick="closeAddModal()">Болдырмау</button>
-                    <button type="submit" class="btn btn-success">Қосу</button>
+                    <button type="button" class="btn btn-primary" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Модальное окно подтверждения удаления -->
+
     <div id="deleteModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-bottom: 15px; color: #2c3e50;">Студентті жою</h3>
+            <h3 style="margin-bottom: 15px; color: #2c3e50;">Delete student</h3>
             <p id="deleteConfirmText" style="margin-bottom: 20px; color: #7f8c8d;"></p>
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <button id="confirmDeleteBtn" class="btn btn-danger">Ия, жою</button>
-                <button class="btn btn-primary" onclick="closeDeleteModal()">Болдырмау</button>
+                <button id="confirmDeleteBtn" class="btn btn-danger">Yes, delete</button>
+                <button class="btn btn-primary" onclick="closeDeleteModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -629,7 +631,7 @@
     let studentToDelete = null;
 
     function showAddForm() {
-        console.log("➕ Студент қосу формасы ашылды");
+        console.log("➕ Add student form opened");
         document.getElementById('addModal').style.display = 'flex';
     }
 
@@ -638,39 +640,37 @@
         document.getElementById('addStudentForm').reset();
     }
 
-    // Добавление студента
     document.getElementById('addStudentForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        console.log("📤 Студент қосу сұранысы жіберілді");
-        
+        console.log("📤 Add student request sent");
+
         const formData = new FormData(this);
-        
+
         fetch('/add_student', {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
-            console.log("📥 Жауап:", data);
+            console.log("📥 Response:", data);
             if (data.success) {
                 alert(data.message);
                 location.reload();
             } else {
-                alert('Қате: ' + data.message);
+                alert('Error: ' + data.message);
             }
         })
         .catch(error => {
-            console.error('❌ Қате:', error);
-            alert('Қосу кезінде қате орын алды');
+            console.error('❌ Error:', error);
+            alert('Unable to add the record');
         });
     });
 
-    // Подтверждение удаления
     function confirmDelete(studentId, studentName) {
-        console.log("🗑️ Студент жою:", studentId, studentName);
+        console.log("🗑️ Delete student:", studentId, studentName);
         studentToDelete = studentId;
-        document.getElementById('deleteConfirmText').textContent = 
-            'Сіз шынымен "' + studentName + '" студентін жойғыңыз келе ме?';
+        document.getElementById('deleteConfirmText').textContent =
+            'Are you sure you want to delete "' + studentName + '"?';
         document.getElementById('deleteModal').style.display = 'flex';
     }
 
@@ -679,13 +679,11 @@
         studentToDelete = null;
     }
 
-    // Удаление студента
-   // Удаление студента
+
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
     if (studentToDelete) {
-        console.log("📤 Студент жою сұранысы жіберілді:", studentToDelete);
-        
-        // ИСПРАВЛЕННЫЙ МАРШРУТ - используем POST запрос
+        console.log("📤 Delete student request sent:", studentToDelete);
+
         fetch('/delete_student/' + studentToDelete, {
             method: 'POST',
             headers: {
@@ -696,17 +694,16 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function()
             if (response.ok) {
                 location.reload();
             } else {
-                alert('Жою кезінде қате орын алды');
+                alert('Unable to delete the record');
             }
         })
         .catch(error => {
-            console.error('❌ Қате:', error);
-            alert('Жою кезінде қате орын алды');
+            console.error('❌ Error:', error);
+            alert('Unable to delete the record');
         });
     }
 });
 
-    // Функции фильтрации
     function resetFilters() {
         window.location.href = '/students';
     }
@@ -717,7 +714,6 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function()
         window.location.href = url.toString();
     }
 
-    // Закрытие модальных окон при клике вне их
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {

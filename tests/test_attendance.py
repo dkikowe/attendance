@@ -18,38 +18,6 @@ import zxingcpp
 
 SOURCE = Path(__file__).resolve().parents[1]
 
-@pytest.fixture(scope='session')
-def site(tmp_path_factory):
-    # Never connect tests to a provisioned cloud database.
-    import os
-    for key in ('TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN', 'VERCEL', 'APP_ENV'):
-        os.environ.pop(key, None)
-    runtime = tmp_path_factory.mktemp('qr_site')
-    for name in ('app.py', 'attendance.py', 'network.py', 'passwords.py', 'database.py'):
-        shutil.copy2(SOURCE / name, runtime / name)
-    shutil.copytree(SOURCE / 'templates', runtime / 'templates')
-    sys.path.insert(0, str(runtime))
-    module = importlib.import_module('app')
-    module.app.config.update(TESTING=True, SECRET_KEY='isolated-test-secret', PUBLIC_BASE_URL='')
-    with sqlite3.connect(module.DB_PATH) as conn:
-        conn.execute("INSERT INTO attendance_groups(name) VALUES('QR test group')")
-        group = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
-        for name, role, gid in [('qr_teacher', 'teacher', None), ('qr_student', 'user', group), ('qr_other', 'user', None)]:
-            conn.execute('INSERT INTO users(username,password,role,attendance_group_id) VALUES(?,?,?,?)', (name, hashlib.md5(b'testpass123').hexdigest(), role, gid))
-        teacher = conn.execute("SELECT id FROM users WHERE username='qr_teacher'").fetchone()[0]
-        conn.execute('INSERT INTO courses(name,teacher_id,group_id) VALUES(?,?,?)', ('QR test course', teacher, group))
-    snapshot = runtime / 'baseline.db'
-    shutil.copy2(module.DB_PATH, snapshot)
-    return module, snapshot
-
-@pytest.fixture
-def app(site):
-    module, snapshot = site
-    shutil.copy2(snapshot, module.DB_PATH)
-    module.app.config.update(PUBLIC_BASE_URL='', ATTENDANCE_TIMEZONE='Asia/Almaty')
-    return module.app
-
-
 def login(client, name):
     return client.post('/login', data={'username': name, 'password': 'testpass123'})
 
@@ -100,14 +68,14 @@ def test_scan_login_record_teacher_list_and_csv(app):
     assert response.headers['Location'] == '/login'
     assert login(student, 'qr_student').headers['Location'] == checkin
     page = student.get(checkin, follow_redirects=True)
-    assert 'Қатысу белгіленді'.encode() in page.data
+    assert b'Attendance recorded' in page.data
     assert records() == 1
     page = teacher.get(detail)
-    assert '1 қатысты'.encode() in page.data
+    assert b'1 present' in page.data
     assert b'qr_student' in page.data
     report = teacher.get('/attendance/report.csv')
     assert report.status_code == 200
-    assert 'Қатысты'.encode() in report.data
+    assert b'Present' in report.data
     assert b'qr_student' in report.data
     student.get(checkin, follow_redirects=True)
     assert records() == 1
@@ -128,8 +96,8 @@ def test_scan_register_then_login_resumes_checkin(app):
 
 
 @pytest.mark.parametrize('name,token_override,message', [
-    ('qr_other', None, 'сіздің тобыңызға'),
-    ('qr_student', 'invalid-token', 'QR-код табылмады'),
+    ('qr_other', None, 'not for your group'),
+    ('qr_student', 'invalid-token', 'QR code not found'),
 ])
 def test_invalid_checkins_do_not_write(app, name, token_override, message):
     _, _, checkin = lesson(app)
@@ -147,7 +115,7 @@ def test_expired_or_future_session(app, offset):
     client = app.test_client()
     login(client, 'qr_student')
     page = client.get(checkin, follow_redirects=True)
-    assert 'QR-код уақыты'.encode() in page.data
+    assert b'The QR code is not active yet or has expired' in page.data
     assert records() == 0
 
 

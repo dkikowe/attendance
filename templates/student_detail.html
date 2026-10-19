@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="kk">
+<html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <title>{{ student[1] }} - Толық ақпарат</title>
+    <title>{{ student[1] }} - Details</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Segoe UI', sans-serif; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
@@ -30,8 +31,8 @@
         .edit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(243,156,18,0.4); }
         .delete-btn { background: linear-gradient(45deg, #e74c3c, #c0392b); color: white; border: none; padding: 12px 25px; border-radius: 15px; cursor: pointer; font-size: 1em; font-weight: 600; box-shadow: 0 4px 15px rgba(231,76,60,0.3); }
         .delete-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231,76,60,0.4); }
-        @media (max-width: 600px) { 
-            .info-grid { grid-template-columns: 1fr; } 
+        @media (max-width: 600px) {
+            .info-grid { grid-template-columns: 1fr; }
             .student-photo-container { width: 150px; height: 150px; }
             .action-buttons { flex-direction: column; }
         }
@@ -39,35 +40,35 @@
 </head>
 <body>
     <div class="container">
-        <a href="/students" class="back-btn"><span>⬅</span>Артқа қайту</a>
-        
+        <a href="/students" class="back-btn"><span>⬅</span>Back</a>
+
         <div class="student-card">
             <div class="student-photo-container">
                 <div class="default-avatar {% if student[2] == 'Әйел' %}female{% else %}male{% endif %}">
                     {% if student[2] == 'Әйел' %}👩{% else %}👨{% endif %}
                 </div>
             </div>
-            
+
             <h1 class="student-name">{{ student[1] }}</h1>
             <div class="student-gender">
-                {% if student[2] == 'Әйел' %}<span style="color: #e91e63;">👩 Әйел</span>{% else %}<span style="color: #2196f3;">👨 Ер</span>{% endif %}
+                {% if student[2] == 'Әйел' %}<span style="color: #e91e63;">👩 Female</span>{% else %}<span style="color: #2196f3;">👨 Male</span>{% endif %}
             </div>
-            
+
             <div class="info-grid">
-                <div class="info-item"><div class="info-label">🎂 Туған күні</div><div class="info-value">{{ student[3] }}</div></div>
-                <div class="info-item age-info"><div class="info-label">🎈 Жасы</div><div class="info-value">{{ student[4] }} жас</div></div>
-                <div class="info-item full-width"><div class="info-label">🎓 Факультет</div><div class="info-value">{{ student[5] }}</div></div>
-                <div class="info-item contact-info"><div class="info-label">📞 Телефон</div><div class="info-value">{{ student[6] }}</div></div>
-                <div class="info-item contact-info"><div class="info-label">📧 Электронды пошта</div><div class="info-value">{{ student[7] }}</div></div>
+                <div class="info-item"><div class="info-label">🎂 Date of birth</div><div class="info-value">{{ student[3] }}</div></div>
+                <div class="info-item age-info"><div class="info-label">🎈 Age</div><div class="info-value">{{ student[4] }} years</div></div>
+                <div class="info-item full-width"><div class="info-label">🎓 Faculty</div><div class="info-value">{{ student[5]|english }}</div></div>
+                <div class="info-item contact-info"><div class="info-label">📞 Phone</div><div class="info-value">{{ student[6] }}</div></div>
+                <div class="info-item contact-info"><div class="info-label">📧 Email</div><div class="info-value">{{ student[7] }}</div></div>
                 <div class="info-item iin-info">
-    <div class="info-label">🆔 ЖСН</div>
+    <div class="info-label">🆔 National ID</div>
     <div class="info-value">
         {% if permissions.can_view_iin %}
             {{ student[8] }}
         {% else %}
             ************
             <div style="font-size: 0.8em; margin-top: 5px; color: #e74c3c;">
-                ⛔ ЖСН көруге рұқсат жоқ
+                ⛔ You do not have permission to view this ID
             </div>
         {% endif %}
     </div>
@@ -77,13 +78,13 @@
             <div class="action-buttons">
                 {% if permissions.can_edit_student %}
                 <a href="/edit_student/{{ student[0] }}" class="edit-btn">
-                    ✏️ Өзгерту
+                    ✏️ Edit
                 </a>
                 {% endif %}
-                
+
                {% if permissions.can_delete_student %}
-<form action="/delete_student/{{ student[0] }}" method="POST" onsubmit="return confirm('Сіз шынымен {{ student[1] }} студентін жойғыңыз келе ме?')" style="display: inline;">
-    <button type="submit" class="delete-btn">🗑️ Жою</button>
+<form action="/student/delete/{{ student[0] }}" method="POST" onsubmit="return confirm('Delete this student?')" style="display: inline;">
+    <button type="submit" class="delete-btn">🗑️ Delete</button>
 </form>
 {% endif %}
             </div>
